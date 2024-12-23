@@ -89,7 +89,7 @@ class Home extends BaseController
         $image = $_GET['img'];
         $this->response->setHeader("Content-Type", "image/jpg");
 
-        $path = ROOTPATH . 'public' . DIRECTORY_SEPARATOR . "img" . DIRECTORY_SEPARATOR . "products" . DIRECTORY_SEPARATOR . $image;
+        $path = ROOTPATH . 'public_html' . DIRECTORY_SEPARATOR . "img" . DIRECTORY_SEPARATOR . "products" . DIRECTORY_SEPARATOR . $image;
 
         if (file_exists($path)) {
             return $this->response->setBody(file_get_contents($path))->send();

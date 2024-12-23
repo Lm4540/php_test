@@ -101,6 +101,7 @@ _modules/*
 *.iml
 
 /public/img/products
+/public_html/img/products
 test.html
 builds
 LICENCE
