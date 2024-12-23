@@ -102,6 +102,13 @@ _modules/*
 
 /public/img/products
 test.html
+builds
+LICENCE
+sql.sql
+spark
+preload.php
+phpunit.xml.dist
+/test
 
 
 # Visual Studio Code
