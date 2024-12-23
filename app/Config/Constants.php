@@ -92,3 +92,7 @@ define('EVENT_PRIORITY_NORMAL', 100);
  * @deprecated Use \CodeIgniter\Events\Events::PRIORITY_HIGH instead.
  */
 define('EVENT_PRIORITY_HIGH', 10);
+
+define('API_SECRET_V1', 'yK*O8gbkeIs2KS4ltC3aXF411SpwpQFF');
+define( 'API_IDENTIFICATION_V1', '6Y3A%jw0cJgBBYV2mbL&8yvocV@%b&qt');
+define('API_ROUTE_V1', 'http://localhost:8080/api/v1/');
