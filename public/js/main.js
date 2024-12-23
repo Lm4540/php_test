@@ -8,7 +8,7 @@ if (notifications !== undefined) {
 const say = (msg, lang = 'es-MX') => {
 
     try {
-        if (VoiceEnabled !== undefined && VoiceEnabled === true) {
+        if (true) {
             speechSynthesis.cancel();
             let voices = speechSynthesis.getVoices();
             let _Utterance = new SpeechSynthesisUtterance();

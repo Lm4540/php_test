@@ -41,6 +41,8 @@ class Home extends BaseController
     }
 
     public function login() {
+        
+
         return $this->session->has('client') && $this->session->has('user')
             ? redirect()->to(site_url('vip'))
             : view('login', ['title' => 'Iniciar Session',]);
@@ -116,7 +118,7 @@ class Home extends BaseController
     }
 
     private function post_data($uri, $data, $method = 'POST', $retry = true): array {
-        $api_url = API_ROUTE_V1 . $uri;
+        $api_url = $_ENV['API_ROUTE_V1'] . $uri;
         $client = new Client();
         try {
             // Realizar la solicitud POST para autenticarse
@@ -168,7 +170,7 @@ class Home extends BaseController
     }
 
     private function get_data($uri, $retry = true, $method = 'GET') {
-        $api_url = API_ROUTE_V1 . $uri;
+        $api_url = $_ENV['API_ROUTE_V1'] . $uri;
         //Obtener el token almacenado
         $token = $this->last_token;
         // Crear el cliente Guzzle y capturar los errores
@@ -216,15 +218,15 @@ class Home extends BaseController
     }
 
     private function get_token(): string {
-        $api_url = API_ROUTE_V1 . 'login';
+        $api_url = $_ENV['API_ROUTE_V1'] . 'login';
 
         $client = new Client();
         try {
             // Realizar la solicitud POST para autenticarse
             $res = $client->request('POST', $api_url, [
                 'json' => [
-                    'identification' => API_IDENTIFICATION_V1,
-                    'secret' => API_SECRET_V1,
+                    'identification' => $_ENV['API_IDENTIFICATION_V1'],
+                    'secret' => $_ENV['API_SECRET_V1'],
                 ],
                 'headers' => [
                     'Accept' => 'application/json',
