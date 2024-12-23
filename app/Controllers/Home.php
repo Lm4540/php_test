@@ -10,7 +10,7 @@ use GuzzleHttp\Exception\ConnectException;
 
 class Home extends BaseController
 {
-    private string $notFoundPath = ROOTPATH . 'public' . DIRECTORY_SEPARATOR . "img" . DIRECTORY_SEPARATOR . "products" . DIRECTORY_SEPARATOR . 'not-found.jpg';
+    private string $notFoundPath = ROOTPATH . 'public' . DIRECTORY_SEPARATOR . "img" . DIRECTORY_SEPARATOR .  'not-found.jpg';
     private function log($var): void {
         echo '<pre>';
         var_dump($var);
