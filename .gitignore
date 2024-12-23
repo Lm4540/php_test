@@ -110,7 +110,6 @@ preload.php
 phpunit.xml.dist
 /test
 
-
 # Visual Studio Code
 .vscode/
 
