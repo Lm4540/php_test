@@ -2,8 +2,8 @@
 <?php $this->section('css') ?>
 <style>
       .card-product {
-            max-width: 300px;
-            margin: 20px;
+            max-width: 450px;
+            margin-top: 20px;
       }
 
       .price {
@@ -65,25 +65,49 @@
       .text-success {
             color: #198754 !important;
       }
-      
+
       .text-warning {
-            color:rgb(218, 123, 16) !important;
+            color: rgb(218, 123, 16) !important;
 
       }
 
-      #filterDiv {
-            display: none;
+      .badge {
+            cursor: pointer;
+            font-size: small !important;
       }
 
-      /* Mostrar los filtros en pantallas más grandes */
-      @media (min-width: 768px) {
-            #filterDiv {
-                  display: flex !important;
+      a.badge {
+            text-decoration: none;
+      }
+
+      .bg-success {
+            background-color: #198754 !important;
+      }
+
+
+
+      @media print {
+
+            #productGrid {
+                  width: 100%;
+                  margin: 0;
+                  font-size: small !important;
             }
 
-            #toggleFilterBtn {
-                  display: none;
+            .navbar,
+            #filterDiv,
+            #footer,
+            .product_buttons,
+            #toggleFilterBtn,
+            #scrollTopBtn,
+            #category_title {
+                  display: none !important;
             }
+
+            .card {
+                  page-break-inside: avoid;
+            }
+
       }
 </style>
 <?php $this->endSection() ?>
@@ -96,14 +120,17 @@
 
 </div>
 
-<div class="container">
-      <h1 class="my-4"><?php echo $name ?></h1>
-      <button id="toggleFilterBtn" class="btn btn-primary mb-3">Mostrar Filtros</button>
+<div class="container-fluid">
+      <h1 class="my-4" id="category_title"><?php echo $name ?></h1>
+      <span class="badge bg-success mt-4 mb-4" onclick="window.print()"><i class="fas fa-print"></i> Imprimir</span>
+
+
+
       <div id="filterDiv" class="row mb-4">
             <?php if (count($categories) > 1) { ?>
                   <div class="col-md-4 form-group">
                         <label for="categoryFilter" class="form-label">Categoría</label>
-                        <select class="form-select" id="categoryFilter">
+                        <select class="form-select" id="categoryFilter" disabled>
                               <option value="all">Todas</option>
                               <?php
 
@@ -116,7 +143,7 @@
 
                   <div class="col-md-4 form-group">
                         <label for="searchInput" class="form-label">Buscar Producto</label>
-                        <input type="text" class="form-control" id="searchInput" placeholder="Buscar...">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Buscar..." disabled>
                   </div>
 
             <?php }
@@ -128,7 +155,7 @@
                   </div>
             <?php } ?>
       </div>
-      <div id="productGrid" class="row gx-5">
+      <div id="productGrid" class="row align-items-stretch">
 
       </div>
       <div id="endOfList" class="text-center my-4" style="display: none;">
@@ -160,11 +187,12 @@
       var catalog = null;
       var sellerName = '',
             sellerNumber = "";
+      var the_products_are_ready = false;
 
       var screen_div = document.querySelector("#screen_div");
 
       const captura = (id, name) => {
-
+            console.log(id, name)
 
             screen_div.querySelector("#capture_div").innerHTML = document.getElementById('div_product_' + id).outerHTML;
 
@@ -174,6 +202,7 @@
                   link.href = imgData;
                   link.download = name + '.png';
                   link.click();
+                  canvas = null;
 
 
             });
@@ -205,18 +234,37 @@
 
             const fetchProducts = async () => {
                   products = [];
-                  var response = await fetch('<?= $lock_categorie !== null ? "/vip/products?cat=" . $lock_categorie : "/vip/products" ?>'); // Cambia esta URL por la URL real de tu API
-                  response = await response.json();
-                  if (response.status == "success") {
-                        sellerName = response.sellerName;
-                        sellerNumber = response.sellerNumber;
-                        products = response.data;
 
-                  }
 
-                  displayProducts(currentIndex, currentIndex + productsPerPage);
                   try {
+                        var response = await fetch('<?= $lock_categorie !== null ? "/vip/products?cat=" . $lock_categorie : "/vip/products" ?>', {
+                              method: 'GET', // *GET, POST, PUT, DELETE, etc.
+                              mode: 'cors', // no-cors, *cors, same-origin
+                              cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+                              credentials: 'same-origin', // include, *same-origin, omit
+                              headers: {
+                                    'Content-Type': 'application/json'
+                                    // 'Content-Type': 'application/x-www-form-urlencoded',
+                              },
+                              redirect: 'follow', // manual, *follow, error
+                              referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+                        }); // Cambia esta URL por la URL real de tu API
+                        response = await response.json();
+                        if (response.status == "success") {
+                              sellerName = response.sellerName;
+                              sellerNumber = response.sellerNumber;
+                              products = response.data;
+                              the_products_are_ready = true;
+                              categoryFilter.disabled = false;
+                              searchInput.disabled = false;
+                              displayProducts(currentIndex, currentIndex + productsPerPage);
+
+                        } else {
+                              console.log(response);
+                              return errorMessage("La página esta saturada en este momento " + response.status);
+                        }
                   } catch (error) {
+                        return errorMessage("La página esta saturada en este momento, por favor inténtalo nuevamente en 5 minutos " + error);
                         console.error('Error fetching products:', error);
                   }
             };
@@ -232,8 +280,8 @@
 
 
                               const productCard = document.createElement("div");
-                              productCard.className = "col-12 col-xs-6 col-md-6 col-lg-4 ";
-                              let ct = `<div class="card card-product" id="div_product_${product.product}"> 
+                              productCard.className = "col col-md-6 col-lg-4 d-flex ";
+                              let ct = `<div class="card card-product flex-fill" id="div_product_${product.id}"> 
             <img src="/image?img=${product.image}" class="card-img-top"
                   alt="Producto">
             <div class="card-body">
@@ -260,15 +308,17 @@
 
 
                               let text = encodeURI(`Hola, por favor reserveme este producto: \nSKU: ${product.sku} no catalogo`);
-                              ct += `<a href="https://wa.me/503${sellerNumber}?text=${text}" class="btn btn-outline-success mt-1">
+                              ct += `<div class="product_buttons">
+                              <a href="https://wa.me/503${sellerNumber}?text=${text}" class="btn btn-outline-success mt-1">
                                           <i class="fab fa-whatsapp fa-lg fa-fw"></i>Solicitar
                                     </a>
-                                    <button class="btn btn-outline-secondary mt-1" onclick="captura(${product.product}, '${product.sku}')">
+                                    <button class="btn btn-outline-secondary mt-1" onclick="captura(${product.id}, '${product.sku}')">
                                           <i class="fas fa-crop fa-lg fa-fw "></i>Captura
                                     </button>
                                     <a href="/image?img=${product.image}" download="${product.sku}.jpg" class="btn btn-outline-primary mt-1"> 
                                          <i class="fas fa-download fa-lg fa-fw "></i> Descargar Imagen
                                     </a>
+                  </div>                        
             </div>
       </div>`;
 
@@ -311,7 +361,7 @@
                   const selectedCategory = `${categoryFilter.value}`;
                   const searchQuery = searchInput.value.toLowerCase();
 
-                  console.log(selectedCategory)
+                  // console.log(selectedCategory)
 
                   return products.filter(product => {
                         const matchesCategory = (selectedCategory === "all" || product.classification == selectedCategory);
@@ -322,30 +372,27 @@
                   });
             };
 
-            toggleFilterBtn.addEventListener('click', () => {
-                  if (filterDiv.style.display === 'none' || filterDiv.style.display === '') {
-                        filterDiv.style.display = 'flex';
-                        toggleFilterBtn.textContent = 'Ocultar Filtros';
-                  } else {
-                        filterDiv.style.display = 'none';
-                        toggleFilterBtn.textContent = 'Mostrar Filtros';
+
+
+            categoryFilter.addEventListener("change", () => {
+                  if (the_products_are_ready) {
+                        currentIndex = 0;
+                        endOfList.style.display = "none";
+                        productGrid.innerHTML = ""; // Clear existing products
+                        displayedProducts = []; // Clear existing product references
+                        displayProducts(currentIndex, currentIndex + productsPerPage);
                   }
             });
 
-            categoryFilter.addEventListener("change", () => {
-                  currentIndex = 0;
-                  endOfList.style.display = "none";
-                  productGrid.innerHTML = ""; // Clear existing products
-                  displayedProducts = []; // Clear existing product references
-                  displayProducts(currentIndex, currentIndex + productsPerPage);
-            });
-
             searchInput.addEventListener("input", () => {
-                  currentIndex = 0;
-                  endOfList.style.display = "none";
-                  productGrid.innerHTML = ""; // Clear existing products
-                  displayedProducts = []; // Clear existing product references
-                  displayProducts(currentIndex, currentIndex + productsPerPage);
+                  if (the_products_are_ready) {
+                        currentIndex = 0;
+                        endOfList.style.display = "none";
+                        productGrid.innerHTML = ""; // Clear existing products
+                        displayedProducts = []; // Clear existing product references
+                        displayProducts(currentIndex, currentIndex + productsPerPage);
+                  }
+
             });
 
             fetchProducts();

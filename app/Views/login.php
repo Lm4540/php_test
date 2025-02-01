@@ -164,9 +164,10 @@
             response = await response.json();
 
             if (response.status == "success") {
-                  window.location.href = "/vip"
+                  window.location.href = "/vip/product"
             } else {
                   errorMessage(response.message);
+                  setTimeout(() => { location.reload(); }, 2000);
             }
       }
 

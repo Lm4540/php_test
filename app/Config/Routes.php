@@ -19,6 +19,7 @@ $routes->get('/logout', 'Home::logout', ['as'=> 'logout']);
 $routes->get('/catalog', 'Home::catalog', ['as'=> 'catalog']);
 $routes->get('/catalog/products', 'Home::catalogProducts', ['as'=> 'catalog_products']);
 $routes->get('/image', 'Home::image');
+$routes->get('/rm_image', 'Home::rm_image');
 $routes->get('/product/(:num)', 'Home::ClientViewProduct/$1');
 
 //solo los clientes que ha iniciado session

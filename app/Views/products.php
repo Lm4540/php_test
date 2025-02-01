@@ -6,7 +6,10 @@
             border-radius: 5px;
             text-align: center;
             padding: 10px;
-            margin: 10px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            margin-left:0;
+            margin-right: 0;
             border-radius: 10px;
       }
 
@@ -19,20 +22,13 @@
       }
 
       /* Ocultar los filtros por defecto en móviles */
-      #filterDiv {
-            display: none;
+      #productGrid .row .col{
+            padding-left: 5px;
+            padding-right: 5px;
       }
 
       /* Mostrar los filtros en pantallas más grandes */
-      @media (min-width: 768px) {
-            #filterDiv {
-                  display: flex !important;
-            }
-
-            #toggleFilterBtn {
-                  display: none;
-            }
-      }
+ 
 
       .btn-secondary:hover {
             background-color: rgb(0, 4, 26);
@@ -72,7 +68,7 @@
 
 <div class="container">
       <h1 class="my-4">Catálogo de Productos</h1>
-      <button id="toggleFilterBtn" class="btn btn-primary mb-3">Mostrar Filtros</button>
+      <!-- <button id="toggleFilterBtn" class="btn btn-primary mb-3">Mostrar Filtros</button> -->
       <div id="filterDiv" class="row mb-4">
             <div class="col-md-4 form-group">
                   <label for="categoryFilter" class="form-label">Categoría</label>
@@ -92,7 +88,7 @@
                   <input type="text" class="form-control" id="searchInput" placeholder="Buscar...">
             </div>
       </div>
-      <div id="productGrid" class="row gx-5">
+      <div id="productGrid" class="row">
 
             <div id="endOfList" class="text-center my-4" style="display: none;">
                   <p>Fin de la lista</p>
@@ -162,7 +158,7 @@
                         if (product.price > 0) {
 
                               const productCard = document.createElement("div");
-                              productCard.className = "col-12 col-sm-6 col-md-4 ";
+                              productCard.className = "col-6 col-sm-6 col-md-4 ";
                               productCard.innerHTML = `<div class="product-card">
                               <img src="/image?img=${product.image}" alt="Producto 1" class="product-image" loading="lazy">
                               <a href="/product/${product.product}" class="card_link"> 
@@ -219,15 +215,7 @@
                   });
             };
 
-            toggleFilterBtn.addEventListener('click', () => {
-                  if (filterDiv.style.display === 'none' || filterDiv.style.display === '') {
-                        filterDiv.style.display = 'flex';
-                        toggleFilterBtn.textContent = 'Ocultar Filtros';
-                  } else {
-                        filterDiv.style.display = 'none';
-                        toggleFilterBtn.textContent = 'Mostrar Filtros';
-                  }
-            });
+            
 
             categoryFilter.addEventListener("change", () => {
                   currentIndex = 0;

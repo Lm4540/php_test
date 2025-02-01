@@ -34,7 +34,7 @@
                               <li><a class="text-decoration-none" href="/about">Sobre Nosotros</a></li>
                               <li><a class="text-decoration-none" href="/contact">Contacto y Ubicaciones</a>
                               </li>
-                              <li><a class="text-decoration-none" href="/faqs">Preguntas Frecuentes</a></li>
+                              
                               <li><a class="text-decoration-none" href="/terms">Términos y condiciones de
                                           uso</a></li>
                               <li><a class="text-decoration-none" href="/privacy_policy">Política de privacidad</a>

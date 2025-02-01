@@ -10,7 +10,7 @@ use GuzzleHttp\Exception\ConnectException;
 
 class Home extends BaseController
 {
-    private string $notFoundPath = ROOTPATH . 'public' . DIRECTORY_SEPARATOR . "img" . DIRECTORY_SEPARATOR .  'not-found.jpg';
+    private string $notFoundPath = ROOTPATH . 'public_html' . DIRECTORY_SEPARATOR . "img" . DIRECTORY_SEPARATOR . 'not-found.jpg';
     private function log($var): void {
         echo '<pre>';
         var_dump($var);
@@ -41,7 +41,7 @@ class Home extends BaseController
     }
 
     public function login() {
-        
+
 
         return $this->session->has('client') && $this->session->has('user')
             ? redirect()->to(site_url('vip'))
@@ -87,11 +87,22 @@ class Home extends BaseController
 
     public function image() {
         $image = $_GET['img'];
-        $this->response->setHeader("Content-Type", "image/jpg");
+        $this->response->setHeader("Content-Type", "image/jpg")->setHeader('Cache-Control', 'public, store, cache')->setHeader('Pragma','cache');
+        $this->response->setCache([
+            'max-age'  => 60000,
+            's-maxage' => 60000,
+            'etag'     => 'abcde',
+        ]);
+
+      
+
+
 
         $path = ROOTPATH . 'public_html' . DIRECTORY_SEPARATOR . "img" . DIRECTORY_SEPARATOR . "products" . DIRECTORY_SEPARATOR . $image;
 
-        if (file_exists($path)) {
+        if (!isset($_GET['renew']) && file_exists($path)) {
+
+
             return $this->response->setBody(file_get_contents($path))->send();
         }
 
@@ -286,7 +297,7 @@ class Home extends BaseController
 
     public function catalog() {
         if ($this->session->has('client') && $this->session->has('user')) {
-            return redirect()->to(site_url('vip'));
+            return redirect()->to(site_url('vip/product'));
         }
         $categories = $this->get_data('categories');
         $categories = $categories['status'] == "success" ? $categories['data'] : [];
@@ -404,10 +415,26 @@ class Home extends BaseController
             //verificar si el producto tiene otras imagenes
             $more_images = [];
             //verificar si el cliente esta loguiedo y devolver una vista u otra
-            return view('viewProduct_', ['title' => $product['name']. ' | Riveras Group',  'product' => $product, 'images' => $more_images]);
+            return view('viewProduct_', ['title' => $product['name'] . ' | Riveras Group', 'product' => $product, 'images' => $more_images]);
         }
 
         return view('Product404');
+    }
+
+    public function rm_image() {
+
+        if (isset($_GET['img'])) {
+
+            $image = $_GET['img'];
+            $path = ROOTPATH . 'public_html' . DIRECTORY_SEPARATOR . "img" . DIRECTORY_SEPARATOR . "products" . DIRECTORY_SEPARATOR . $image;
+
+            if (file_exists($path)) {
+                unlink($path);
+                return $this->response->setJSON(["status" => "success", "message" => "Image deleted"]);
+            }
+            return $this->response->setJSON(["status" => "error", "message" => "image not found"]);
+        }
+        return $this->response->setJSON(["status" => "error", "message" => "Parametro no recibido"]);
     }
 
 

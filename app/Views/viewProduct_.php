@@ -153,7 +153,7 @@
                 <?= $product['cant'] == 0 ? '<p class="text-danger">AGOTADO</p>' : ($product['cant'] > 3 ? '<p class="text-success">En Stock</p>' : '<p class="text-warning">Últimas Existencias Disponibles</p>') ?>
 
 
-                <?php $text = "Hola, por favor reserveme este producto: \nSKU: " . $product['sku'] . " N/C";
+                <?php $text = "Hola, podria darme mas informacion sobre este producto: \nSKU: " . $product['sku'] . " N/C";
 
                 ?>
                 <a href="https://wa.me/50374891187?text=<?= $text ?>" class="btn btn-outline-success mt-1">
