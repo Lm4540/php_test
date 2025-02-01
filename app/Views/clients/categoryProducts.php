@@ -281,9 +281,9 @@
 
                               const productCard = document.createElement("div");
                               productCard.className = "col col-md-6 col-lg-4 d-flex ";
-                              let ct = `<div class="card card-product flex-fill" id="div_product_${product.id}"> 
-            <img src="/image?img=${product.image}" class="card-img-top"
-                  alt="Producto">
+                              let ct = `<div class="card card-product flex-fill" id="div_product_${product.id}">
+                              <img src="/img/products/${product.image}" onerror="error_img(this, '/image?img=${product.image}')" alt="${product.name}" class="card-img-top" loading="lazy">
+            
             <div class="card-body">
             <a href="/vip/product/${product.id}" class="card_link"> 
                   <h5 class="card-title">${product.name}</h5>

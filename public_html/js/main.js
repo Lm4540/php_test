@@ -147,4 +147,10 @@ const createToast = (type, text, lang = null) => {
 }
 
 
+const error_img = (element, src) => {
+    element.onerror = null;
+    element.src = src;
+}
+
+
 

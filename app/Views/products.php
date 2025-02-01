@@ -160,7 +160,7 @@
                               const productCard = document.createElement("div");
                               productCard.className = "col-6 col-sm-6 col-md-4 ";
                               productCard.innerHTML = `<div class="product-card">
-                              <img src="/image?img=${product.image}" alt="Producto 1" class="product-image" loading="lazy">
+                              <img src="/img/products/${product.image}" onerror="error_img(this, '/image?img=${product.image}')" alt="${product.name}" class="product-image" loading="lazy">
                               <a href="/product/${product.product}" class="card_link"> 
                                           <h5 class="card-title">${product.name}</h5></a>
                               <p>SKU: # ${product.sku}</p>

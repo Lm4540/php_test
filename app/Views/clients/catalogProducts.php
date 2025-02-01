@@ -191,7 +191,7 @@
                               const productCard = document.createElement("div");
                               productCard.className = "col-12 col-xs-6 col-md-6 col-lg-4 ";
                               let ct = `<div class="card card-product" id="div_product_${product.product}"> 
-                                    <img src="/image?img=${product.image}" class="card-img-top" alt="Producto">
+                                    <img src="/img/products/${product.image}" onerror="error_img(this, '/image?img=${product.image}')" alt="${product.name}" class="card-img-top" loading="lazy">
                                     <div class="card-body">
                                     
                                           <h5 class="card-title">${product.name}</h5>

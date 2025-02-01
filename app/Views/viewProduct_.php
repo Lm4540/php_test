@@ -102,16 +102,18 @@
 <div class="container mt-5">
     <div class="row" id="ProductDiv">
         <div class="col-md-6">
-            <img id="mainImage" src="/image?img=<?php echo $product['image'] ?>" alt="<?php echo $product['name'] ?>"
-                class="img-fluid product-image">
+            <img id="mainImage" src="/img/products/<?php echo $product['image'] ?>" alt="<?php echo $product['name'] ?>"
+                class="img-fluid product-image"  onerror="error_img(this, '/image?img=<?php echo $product['image'] ?>')">
+
+
             <div class="text-center">
 
                 <button class="btn btn-outline-primary mt-5" onclick="down()"><i class="fas fa-arrow-down"></i>
                     Descargar</button>
             </div>
             <div class="d-flex justify-content-center mt-3">
-                <img src="/image?img=<?php echo $product['image'] ?>" class="thumbnail"
-                    alt="<?php echo $product['name'] ?>" onclick="changeImage(this)">
+                <img src="/img/products/<?php echo $product['image'] ?>" class="thumbnail"
+                    alt="<?php echo $product['name'] ?>" onclick="changeImage(this)" onerror="error_img(this, '/image?img=<?php echo $product['image'] ?>')">
 
                 <?php
                 if (count($images) > 0) {
