@@ -87,6 +87,7 @@ class Filters extends BaseFilters
                     '/image',
                     '/product/*',
                     '/rm_image',
+                    '/data_product/*'
                 ],
             ],
         ],

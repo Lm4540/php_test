@@ -421,6 +421,15 @@ class Home extends BaseController
         return view('Product404');
     }
 
+    public function getProductData($id) {
+        $product = $this->get_data('product/detail/' . $id);
+
+        if ($product['status'] == 'success') {
+            return $this->response->setJSON($product);
+        }
+        return $this->response->setJSON(['status' => 'error', 'message' => 'Product ,no encontrado']);
+    }
+
     public function rm_image() {
 
         if (isset($_GET['img'])) {

@@ -8,7 +8,7 @@
             padding: 10px;
             margin-top: 10px;
             margin-bottom: 10px;
-            margin-left:0;
+            margin-left: 0;
             margin-right: 0;
             border-radius: 10px;
       }
@@ -22,13 +22,13 @@
       }
 
       /* Ocultar los filtros por defecto en móviles */
-      #productGrid .row .col{
+      #productGrid .row .col {
             padding-left: 5px;
             padding-right: 5px;
       }
 
       /* Mostrar los filtros en pantallas más grandes */
- 
+
 
       .btn-secondary:hover {
             background-color: rgb(0, 4, 26);
@@ -47,6 +47,7 @@
             align-items: center;
             font-size: 24px;
       }
+
       .discount-price {
             font-weight: bold;
       }
@@ -99,6 +100,32 @@
 
 
 </div>
+
+<div class="modal fade" id="ver_disponibilidad" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+            <div class="modal-content">
+                  <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="_modal_title">Modal title</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                        <table class="table table-sm table-hover">
+                              <thead>
+                                    <tr>
+                                          <th>Sucrsal</th>
+                                          <th>Existencias</th>
+                                    </tr>
+                              </thead>
+                              <tbody id="existencias"></tbody>
+                        </table>
+                  </div>
+                  <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                  </div>
+            </div>
+      </div>
+</div>
+
 <?php $this->endSection() ?>
 
 <?php $this->section('scripts') ?>
@@ -117,6 +144,7 @@
             let displayedProducts = [];
             const productsPerPage = 10;
             let currentIndex = 0;
+            var lastProduct = null;
 
             // Mostrar el botón cuando se hace scroll hacia abajo
             window.addEventListener('scroll', () => {
@@ -165,6 +193,7 @@
                                           <h5 class="card-title">${product.name}</h5></a>
                               <p>SKU: # ${product.sku}</p>
                               <p class="discount-price">Detalle $ US <span>${product.price}</span></p>
+                              <p><button class="btn btn-outline-secondary mt-1" onclick="show_d(${product.product})">Ver Disponibilidad</button></p>
                               <p><a href="/login" class="btn btn-outline-secondary"> Ver Precio Mayoreo </a></p>
                               </div>
                               </div>
@@ -215,7 +244,7 @@
                   });
             };
 
-            
+
 
             categoryFilter.addEventListener("change", () => {
                   currentIndex = 0;
@@ -235,6 +264,46 @@
 
             fetchProducts();
       });
+
+      ModalDisponibilidad = new bootstrap.Modal(document.getElementById('ver_disponibilidad'), {
+            keyboard: true
+      });
+      const show_d = async id => {
+            try {
+                  var response = await fetch(`/data_product/${id}`, {
+                        method: 'GET', // *GET, POST, PUT, DELETE, etc.
+                        mode: 'cors', // no-cors, *cors, same-origin
+                        cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+                        credentials: 'same-origin', // include, *same-origin, omit
+                        headers: {
+                              'Content-Type': 'application/json'
+                              // 'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        redirect: 'follow', // manual, *follow, error
+                        referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+                  }); // Cambia esta URL por la URL real de tu API
+                  response = await response.json();
+                  if (response.status == "success") {
+                        //establecerf titulo
+                        let product = response.data;
+                        document.querySelector("#_modal_title").innerHTML = product.name;
+
+                        let ctn = ``;
+                        product.stocks.forEach(stock => {
+                              ctn += `<tr><td>${stock.name}</td><td>${stock.cant}</td></tr>`
+                        });
+                        document.querySelector("#existencias").innerHTML = ctn;
+                        ModalDisponibilidad.toggle();
+
+                  } else {
+                        console.log(response);
+                        return errorMessage("La página esta saturada en este momento " + response.status);
+                  }
+            } catch (error) {
+                  return errorMessage("La página esta saturada en este momento, por favor inténtalo nuevamente en 5 minutos " + error);
+                  console.error('Error fetching products:', error);
+            }
+      }
 </script>
 
 

@@ -166,6 +166,31 @@
 
 
 </div>
+
+<div class="modal fade" id="ver_disponibilidad" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+            <div class="modal-content">
+                  <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="_modal_title">Modal title</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                        <table class="table table-sm table-hover">
+                              <thead>
+                                    <tr>
+                                          <th>Sucrsal</th>
+                                          <th>Existencias</th>
+                                    </tr>
+                              </thead>
+                              <tbody id="existencias"></tbody>
+                        </table>
+                  </div>
+                  <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                  </div>
+            </div>
+      </div>
+</div>
 <?php $this->endSection() ?>
 
 <?php $this->section('scripts') ?>
@@ -188,7 +213,7 @@
       var sellerName = '',
             sellerNumber = "";
       var the_products_are_ready = false;
-
+      var lastProduct = null;
       var screen_div = document.querySelector("#screen_div");
 
       const captura = (id, name) => {
@@ -298,11 +323,13 @@
                               if (product.cant == 0) {
                                     ct += `<p class="text-danger">AGOTADO</p>`;
                               } else if (product.cant > 3) {
-                                    ct += `<p class="text-success">En Stock</p>`;
+                                    ct += `<p class="text-success">En Stock</p>
+                                    <p><button class="btn btn-outline-danger mt-1" onclick="show_d(${product.id})">Ver Disponibilidad</button></p>`;
 
                               } else {
 
-                                    ct += `<p class="text-warning">Últimas Existencias Disponibles</p>`;
+                                    ct += `<p class="text-warning">Últimas Existencias Disponibles</p>
+                                    <p><button class="btn btn-outline-danger mt-1" onclick="show_d(${product.id})">Ver Disponibilidad</button></p>`;
                               }
 
 
@@ -397,6 +424,46 @@
 
             fetchProducts();
       });
+
+      ModalDisponibilidad = new bootstrap.Modal(document.getElementById('ver_disponibilidad'), {
+            keyboard: true
+      });
+      const show_d = async id => {
+            try {
+                  var response = await fetch(`/data_product/${id}`, {
+                        method: 'GET', // *GET, POST, PUT, DELETE, etc.
+                        mode: 'cors', // no-cors, *cors, same-origin
+                        cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+                        credentials: 'same-origin', // include, *same-origin, omit
+                        headers: {
+                              'Content-Type': 'application/json'
+                              // 'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        redirect: 'follow', // manual, *follow, error
+                        referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+                  }); // Cambia esta URL por la URL real de tu API
+                  response = await response.json();
+                  if (response.status == "success") {
+                        //establecerf titulo
+                        let product = response.data;
+                        document.querySelector("#_modal_title").innerHTML = product.name;
+
+                        let ctn = ``;
+                        product.stocks.forEach(stock => {
+                              ctn += `<tr><td>${stock.name}</td><td>${stock.cant}</td></tr>`
+                        });
+                        document.querySelector("#existencias").innerHTML = ctn;
+                        ModalDisponibilidad.toggle();
+
+                  } else {
+                        console.log(response);
+                        return errorMessage("La página esta saturada en este momento " + response.status);
+                  }
+            } catch (error) {
+                  return errorMessage("La página esta saturada en este momento, por favor inténtalo nuevamente en 5 minutos " + error);
+                  console.error('Error fetching products:', error);
+            }
+      }
 </script>
 
 

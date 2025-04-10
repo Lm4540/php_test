@@ -21,6 +21,7 @@ $routes->get('/catalog/products', 'Home::catalogProducts', ['as'=> 'catalog_prod
 $routes->get('/image', 'Home::image');
 $routes->get('/rm_image', 'Home::rm_image');
 $routes->get('/product/(:num)', 'Home::ClientViewProduct/$1');
+$routes->get('/data_product/(:num)', 'Home::getProductData/$1');
 
 //solo los clientes que ha iniciado session
 $routes->get('/vip', 'Home::Vip', ['as'=> 'vip']);

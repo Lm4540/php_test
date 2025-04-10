@@ -93,4 +93,30 @@
     </div>
   </div>
 </section>
+
+<section class="bg-light">
+  <div class="container py-5">
+    <div class="row">
+      <div class="mx-auto col-md-8 col-lg-6 text-right">
+      <img class="img-fluid p-3 map_image" src="/img/maps4.jpg" alt="map image">
+      </div>
+      <div class="col-lg-6 mb-0 d-flex align-items-center">
+        <div class="text-align-left align-self-center">
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d365.39524231612506!2d-88.17637628267809!3d13.479945602975718!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8f7b2b5b32166b95%3A0x33441982402d21a6!2sRiveras%20Group%20San%20Miguel!5e0!3m2!1ses-419!2ssv!4v1744293272284!5m2!1ses-419!2ssv"
+            class="maps" style="border:0;" allowfullscreen="" loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"></iframe>
+
+          <h3>Sucursal San Miguel</h3>
+          <p><b>Contacto:</b> <a href="https://wa.me/50375258939" class="a_">7525-8939</a></p>
+          <p>
+            <i class="fas fa-map-marker-alt fa-fw"></i>
+            <b>Dirección: </b>
+            Av. José Simeon Cañas #210BO La Merced, San Miguel Centro
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 <?php $this->endSection() ?>
