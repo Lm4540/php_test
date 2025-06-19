@@ -151,6 +151,19 @@
 <script src="/js/main.js"></script>
 <h1><?php echo session('client') ?></h1>
 <script>
+      const urlParams = new URLSearchParams(window.location.search);
+
+      document.addEventListener("DOMContentLoaded", async event => {
+            const url_document = urlParams.get('_document')
+            const url_pin = urlParams.get('pin')
+            console.log()
+            // console.log(urlParams)
+            // const url_pint = UrlParams.get("pin");
+            if (url_document && url_pin) {
+                  document.querySelector("#document").value = url_document;
+                  document.querySelector("#pin").value =url_pin;
+            }
+      })
 
       const a = async () => {
             let inputs = document.getElementById('login-form').querySelectorAll('input');

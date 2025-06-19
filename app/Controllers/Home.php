@@ -7,10 +7,15 @@ use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\ServerException;
 use GuzzleHttp\Exception\ConnectException;
+use Knp\Snappy\Pdf;
+use PHPMailer\PHPMailer\PHPMailer;
+// use PHPMailer\PHPMailer\Exception;
 
 class Home extends BaseController
 {
     private string $notFoundPath = ROOTPATH . 'public_html' . DIRECTORY_SEPARATOR . "img" . DIRECTORY_SEPARATOR . 'not-found.jpg';
+    private string $binary = '"C:\\Program Files\\wkhtmltopdf\\bin\\wkhtmltopdf.exe"';
+    // private string $binary =  ROOTPATH . '/vendor/h4cc/wkhtmltopdf-amd64/bin/wkhtmltopdf-amd64';
     private function log($var): void {
         echo '<pre>';
         var_dump($var);
@@ -87,14 +92,14 @@ class Home extends BaseController
 
     public function image() {
         $image = $_GET['img'];
-        $this->response->setHeader("Content-Type", "image/jpg")->setHeader('Cache-Control', 'public, store, cache')->setHeader('Pragma','cache');
+        $this->response->setHeader("Content-Type", "image/jpg")->setHeader('Cache-Control', 'public, store, cache')->setHeader('Pragma', 'cache');
         $this->response->setCache([
-            'max-age'  => 60000,
+            'max-age' => 60000,
             's-maxage' => 60000,
-            'etag'     => 'abcde',
+            'etag' => 'abcde',
         ]);
 
-      
+
 
 
 
@@ -227,6 +232,8 @@ class Home extends BaseController
                     . ($e->hasResponse() ? '\nResponse: ' . $e->getResponse()->getBody()->getContents() : '')];
         }
     }
+
+
 
     private function get_token(): string {
         $api_url = $_ENV['API_ROUTE_V1'] . 'login';
@@ -446,8 +453,235 @@ class Home extends BaseController
         return $this->response->setJSON(["status" => "error", "message" => "Parametro no recibido"]);
     }
 
+    public function downloadPDF($id) {
+        $data = $this->get_data('dte/' . $id);
 
 
+        if ($data['status'] == 'success') {
+
+            $snappy = new Pdf($this->binary);
+            //$snappy = new Pdf(ROOTPATH . '/vendor/h4cc/wkhtmltopdf-amd64/bin/wkhtmltopdf-amd64');
+            $snappy->setOptions(array(
+                'enable-javascript' => false,
+                'encoding' => 'UTF-8',
+                "lowquality" => null,
+                "dpi" => 300,
+                'page-size' => "Letter",
+                "title" => $data['dte']['identificacion']['codigoGeneracion'] . ".pdf",
+                "footer-center" => "Página [page] de [topage]",
+                "footer-font-name" => "Verdana",
+                "footer-font-size" => "6",
+                "margin-bottom" => "20mm",
+            ));
+
+
+
+            $this->response->setHeader('Content-Type', 'application/pdf');
+            $this->response->setBody($snappy->getOutputFromHtml($data['data']));
+            return $this->response;
+
+
+        }
+
+        return $this->response->setBody('Documento no Encontrado');
+    }
+
+    public function getDTE($param) {
+        $uuid = $this->request->getGet('uuid');
+        $fecha = $this->request->getGet('fecha');
+
+        if ($param == 'json') {
+            $data = $this->get_data('dte_json/' . $uuid . '/' . $fecha);
+
+            if ($data['status'] == 'success') {
+
+                $jsonContent = json_encode($data['json'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+                // Verifica si hubo un error en la codificación JSON
+                if ($jsonContent === false) {
+                    return $this->response->setStatusCode(500)
+                        ->setJSON(['status' => 'error', 'message' => 'Error al generar el archivo JSON.']);
+                }
+
+                // 3. Establecer las cabeceras HTTP para la descarga
+                $filename = $data['json']['identificacion']['codigoGeneracion'] . '.json'; // Nombre del archivo sugerido
+
+                return $this->response
+                    ->setHeader('Content-Type', 'application/json') // Tipo de contenido JSON
+                    ->setHeader('Content-Disposition', 'attachment; filename="' . $filename . '"') // Fuerza la descarga con un nombre de archivo
+                    ->setBody($jsonContent);
+
+            }
+            return $this->response->setStatusCode(404)
+                ->setJSON(['status' => 'error', 'message' => 'Documento no encontrado, revise los datos y consulte nuevamente']);
+
+        }
+        else if ($param == 'inline' || $param == 'download') {
+
+            $data = $this->get_data('dte/' . $uuid . '/' . $fecha);
+
+            if ($data['status'] == 'success') {
+
+                $snappy = new Pdf($this->binary);
+
+                $document_name = $data['dte']['identificacion']['codigoGeneracion'] . ".pdf";
+                $snappy->setOptions(array(
+                    'enable-javascript' => false,
+                    'encoding' => 'UTF-8',
+                    "lowquality" => null,
+                    "dpi" => 300,
+                    'page-size' => "Letter",
+                    "title" => $document_name,
+                    "footer-center" => "Página [page] de [topage]",
+                    "footer-font-name" => "Verdana",
+                    "footer-font-size" => "6",
+                    "margin-bottom" => "20mm",
+                ));
+
+
+
+                $this->response->setHeader('Content-Type', 'application/pdf');
+                $this->response->setBody($snappy->getOutputFromHtml($data['data']));
+
+                return $param == "inline" ? $this->response : $this->response->setHeader('Content-Disposition', 'attachment; filename="' . $document_name . '"');
+            }
+            return $this->response->setStatusCode(404)
+                ->setJSON(['status' => 'error', 'message' => 'Documento no encontrado, revise los datos y consulte nuevamente']);
+        }
+
+        return $this->response->setStatusCode(404)
+            ->setJSON(['status' => 'error', 'message' => 'Opcion no valida']);
+    }
+
+    public function sendPDF() {
+        try {
+            $id = $this->request->getPost('id');
+            if ($this->request->getPost('dummy_key') !== '03b10bac1ef3b941?hl=es') {
+                return $this->response->setStatusCode(401)
+                    ->setJSON(['status' => 'error', 'message' => '401 Unauthorized']);
+            }
+
+            $data = $this->get_data('dte/' . $id);
+            if ($data['status'] == 'success') {
+
+                $snappy = new Pdf($this->binary);
+
+                $snappy->setOptions(array(
+                    'enable-javascript' => false,
+                    'encoding' => 'UTF-8',
+                    "lowquality" => null,
+                    "dpi" => 300,
+                    'page-size' => "Letter",
+                    "title" => $data['dte']['identificacion']['codigoGeneracion'] . ".pdf",
+                    "footer-center" => "Página [page] de [topage]",
+                    "footer-font-name" => "Verdana",
+                    "footer-font-size" => "6",
+                    "margin-bottom" => "20mm",
+                ));
+                $pdf_file_location = WRITEPATH . $data['dte']['identificacion']['codigoGeneracion'] . ".pdf";
+                $snappy->generateFromHtml($data['data'], $pdf_file_location);
+
+
+                return $this->response->setJSON(
+                    ['status' => 'success', 'message' => 'pdf Generado y7 almacenado']
+                );
+
+
+
+
+
+
+
+                // $mail = new PHPMailer(true);
+                // $mail->SMTPDebug = 0;
+                // $mail->isSMTP();
+                // $mail->CharSet = 'UTF-8';
+                // $mail->Host = "p3plzcpnl505881.prod.phx3.secureserver.net";
+                // $mail->SMTPAuth = true;
+                // $mail->Username = "facturacion@riverasgroup.com";
+                // $mail->isHTML(true);
+                // $mail->Password = "&f?{V7,_kdWd";
+                // $mail->SMTPSecure = 'ssl';
+                // $mail->Port = 465;
+
+
+
+                // // $mail->Host = "smtpout.secureserver.net";
+                // // $mail->SMTPAuth = true;
+                // // $mail->Username = "facturcion@riverasgroup.com";
+                // // $mail->isHTML(true);
+                // // $mail->Password = "Clave123!";
+                // // $mail->SMTPSecure = 'ssl';
+                // // $mail->Port = 465;
+
+                // $mail->setFrom('facturacion@riverasgroup.com', 'Facturación Electrónica Riveras Group');
+                // $mail->addAddress('luisrivera4540@gmail.com');
+                // $mail->Subject = 'FACTURA ELECTRONICA';
+
+
+
+                // $json_formateado = json_encode($data['dte'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+
+                // $mail->addStringAttachment($json_formateado, $data['dte']['identificacion']['codigoGeneracion'].".json", '8bit', 'application/json', 'attachment');
+
+                // $mail->addAttachment($pdf_file_location);
+
+                // $mail->Body = 'Estimad@ client->name, se anexa su documento tributario electrónico';
+
+                // $mail->AltBody = 'Estimad@ client->name, se anexa su documento tributario electrónico';
+                // $mail->send();
+
+                if (file_exists($pdf_file_location)) { // Siempre es buena práctica verificar si existe
+                    unlink($pdf_file_location);
+                }
+
+            }
+            return $this->response->setStatusCode(404)
+                ->setJSON(['status' => 'error', 'message' => '404 Not Found']);
+        }
+        catch (\PHPMailer\PHPMailer\Exception $e) {
+            // var_dump($e);
+            // return $mail->ErrorInfo;
+
+            return $this->response->setStatusCode(404)
+                ->setJSON(['status' => 'error', 'message' => $e->getMessage()]);
+        }
+    }
+
+
+    public function testMail() {
+        try {
+            $mail = new PHPMailer(true);
+            $mail->SMTPDebug = 0;
+            $mail->isSMTP();
+            $mail->CharSet = 'UTF-8';
+            // $mail->Host = "p3plzcpnl505881.prod.phx3.secureserver.net";
+            $mail->Host = "mail.riverasgroup.com";
+            $mail->SMTPAuth = true;
+            $mail->Username = "facturacion@riverasgroup.com";
+            $mail->isHTML(true);
+            $mail->Password = "iennsI8%RGG_";
+            $mail->SMTPSecure = 'ssl';
+            $mail->Port = 465;
+            $mail->setFrom('facturacion@riverasgroup.com', 'Facturación Electrónica Riveras Group');
+            $mail->addAddress('luisrivera4540@gmail.com');
+            $mail->Subject = 'FACTURA ELECTRONICA';
+            $mail->Body = 'Estimad@ client->name, se anexa su documento tributario electrónico';
+            $mail->AltBody = 'Estimad@ client->name, se anexa su documento tributario electrónico';
+            $mail->send();
+
+            return $this->response->setStatusCode(404)
+                ->setJSON(['status' => 'error', 'message' => '404 Not Found']);
+        }
+        catch (\PHPMailer\PHPMailer\Exception $e) {
+            // var_dump($e);
+            // return $mail->ErrorInfo;
+
+            return $this->response->setStatusCode(404)
+                ->setJSON(['status' => 'error', 'message' => [$e->getMessage(), $mail->ErrorInfo],]);
+        }
+    }
 
 
 }

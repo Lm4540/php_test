@@ -72,7 +72,12 @@ class Filters extends BaseFilters
     public array $globals = [
         'before' => [
             'honeypot',
-            'csrf',
+            'csrf' => [
+                'except' => [
+
+                    '/utils/*',
+                ],
+            ],
             'auth' => [
                 'except' => ['/',
                     '/about',
@@ -87,7 +92,8 @@ class Filters extends BaseFilters
                     '/image',
                     '/product/*',
                     '/rm_image',
-                    '/data_product/*'
+                    '/data_product/*',
+                    '/utils/*',
                 ],
             ],
         ],
