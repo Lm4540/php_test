@@ -553,16 +553,20 @@ class Home extends BaseController
             ->setJSON(['status' => 'error', 'message' => 'Opcion no valida']);
     }
 
-    public function sendPDF() {
+    public function sendPDF($id) {
         try {
-            $id = $this->request->getPost('id');
-            if ($this->request->getPost('dummy_key') !== '03b10bac1ef3b941?hl=es') {
+            if ($this->request->getGet('dummy_key') !== '03b10bac1ef3b941?hl=es') {
                 return $this->response->setStatusCode(401)
                     ->setJSON(['status' => 'error', 'message' => '401 Unauthorized']);
             }
 
             $data = $this->get_data('dte/' . $id);
             if ($data['status'] == 'success') {
+                if ($data['dte']['receptor']['correo'] == null || $data['dte']['receptor']['correo'] == "") {
+                    return $this->response->setJSON(
+                        ['status' => 'success', 'message' => 'Este documento no contiene una direccion de correo para enviar el documento']
+                    );
+                }
 
                 $snappy = new Pdf($this->binary);
 
@@ -577,65 +581,50 @@ class Home extends BaseController
                     "footer-font-name" => "Verdana",
                     "footer-font-size" => "6",
                     "margin-bottom" => "20mm",
+
                 ));
-                $pdf_file_location = WRITEPATH . $data['dte']['identificacion']['codigoGeneracion'] . ".pdf";
+                $pdf_file_location = WRITEPATH . '/pdf/' . $data['dte']['identificacion']['codigoGeneracion'] . ".pdf";
                 $snappy->generateFromHtml($data['data'], $pdf_file_location);
 
-
-                return $this->response->setJSON(
-                    ['status' => 'success', 'message' => 'pdf Generado y7 almacenado']
-                );
-
-
-
-
-
-
-
-                // $mail = new PHPMailer(true);
-                // $mail->SMTPDebug = 0;
-                // $mail->isSMTP();
-                // $mail->CharSet = 'UTF-8';
+                $mail = new PHPMailer(true);
+                $mail->SMTPDebug = 0;
+                $mail->isSMTP();
+                $mail->CharSet = 'UTF-8';
                 // $mail->Host = "p3plzcpnl505881.prod.phx3.secureserver.net";
-                // $mail->SMTPAuth = true;
-                // $mail->Username = "facturacion@riverasgroup.com";
-                // $mail->isHTML(true);
-                // $mail->Password = "&f?{V7,_kdWd";
-                // $mail->SMTPSecure = 'ssl';
-                // $mail->Port = 465;
+                $mail->Host = "mail.riverasgroup.com";
+                $mail->SMTPAuth = true;
+                $mail->Username = "facturacion@riverasgroup.com";
+                $mail->isHTML(true);
+                $mail->Password = "iennsI8%RGG_";
+                $mail->SMTPSecure = 'ssl';
+                $mail->Port = 465;
 
+                $mail->setFrom('facturacion@riverasgroup.com', 'Facturación Electrónica Riveras Group');
+                //$mail->addAddress('luisrivera4540@gmail.com');
+                //direccion del correo en el DTE
+                $correo_recibe = $data['dte']['identificacion']['tipoDte'] == "14" ? $data['dte']['sujetoExcluido']['correo'] : $data['dte']['receptor']['correo'];
+                $mail->addAddress($correo_recibe);
 
+                $mail->Subject = 'FACTURA ELECTRONICA';
 
-                // // $mail->Host = "smtpout.secureserver.net";
-                // // $mail->SMTPAuth = true;
-                // // $mail->Username = "facturcion@riverasgroup.com";
-                // // $mail->isHTML(true);
-                // // $mail->Password = "Clave123!";
-                // // $mail->SMTPSecure = 'ssl';
-                // // $mail->Port = 465;
+                $json_formateado = json_encode($data['dte'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                $mail->addStringAttachment($json_formateado, $data['dte']['identificacion']['codigoGeneracion'] . ".json", '8bit', 'application/json', 'attachment');
+                $mail->addAttachment($pdf_file_location);
+                $mail->Body = view('dte/email', [
+                    'client_name' => $data['dte']['receptor']['nombre'],
+                    'date' => $data['dte']['identificacion']['fecEmi'],
+                    'code' => $data['dte']['identificacion']['codigoGeneracion'],
+                ]);
 
-                // $mail->setFrom('facturacion@riverasgroup.com', 'Facturación Electrónica Riveras Group');
-                // $mail->addAddress('luisrivera4540@gmail.com');
-                // $mail->Subject = 'FACTURA ELECTRONICA';
-
-
-
-                // $json_formateado = json_encode($data['dte'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-
-
-                // $mail->addStringAttachment($json_formateado, $data['dte']['identificacion']['codigoGeneracion'].".json", '8bit', 'application/json', 'attachment');
-
-                // $mail->addAttachment($pdf_file_location);
-
-                // $mail->Body = 'Estimad@ client->name, se anexa su documento tributario electrónico';
-
-                // $mail->AltBody = 'Estimad@ client->name, se anexa su documento tributario electrónico';
-                // $mail->send();
+                $mail->AltBody = 'Estimad@ ' . $data['dte']['receptor']['nombre'] . ', se anexa su documento tributario electrónico';
+                $mail->send();
 
                 if (file_exists($pdf_file_location)) { // Siempre es buena práctica verificar si existe
                     unlink($pdf_file_location);
                 }
-
+                return $this->response->setJSON(
+                    ['status' => 'success', 'message' => 'Mensaje Enviado']
+                );
             }
             return $this->response->setStatusCode(404)
                 ->setJSON(['status' => 'error', 'message' => '404 Not Found']);
@@ -671,14 +660,14 @@ class Home extends BaseController
             $mail->AltBody = 'Estimad@ client->name, se anexa su documento tributario electrónico';
             $mail->send();
 
-            return $this->response->setStatusCode(404)
-                ->setJSON(['status' => 'error', 'message' => '404 Not Found']);
+            return $this->response->setStatusCode(200)
+                ->setJSON(['status' => 'success', 'message' => 'Mensaje Enviado']);
         }
         catch (\PHPMailer\PHPMailer\Exception $e) {
             // var_dump($e);
             // return $mail->ErrorInfo;
 
-            return $this->response->setStatusCode(404)
+            return $this->response->setStatusCode(200)
                 ->setJSON(['status' => 'error', 'message' => [$e->getMessage(), $mail->ErrorInfo],]);
         }
     }
