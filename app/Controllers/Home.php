@@ -303,12 +303,21 @@ class Home extends BaseController
     }
 
     public function catalog() {
-        if ($this->session->has('client') && $this->session->has('user')) {
-            return redirect()->to(site_url('vip/product'));
-        }
         $categories = $this->get_data('categories');
         $categories = $categories['status'] == "success" ? $categories['data'] : [];
+        if ($this->session->has('client') && $this->session->has('user')) {
+            return view('clients/categoryProducts', ['title' => 'Catálogo de Productos | Riveras Group', 'name' => 'Catálogo de Productos', 'categories' => $categories, 'lock_categorie' => null]);
+        }
         return view('products', ['title' => 'Riveras Group', 'categories' => $categories]);
+    }
+
+    public function ClientallProducts() {
+        //retornar la vista de visualñizacion de una categoria
+        $categories = $this->get_data('categories');
+        $categories = $categories['status'] == "success" ? $categories['data'] : [];
+        return view('clients/categoryProducts', ['title' => 'Catálogo de Productos | Riveras Group', 'name' => 'Catálogo de Productos', 'categories' => $categories, 'lock_categorie' => null]);
+
+
     }
 
     public function catalogProducts() {
@@ -377,14 +386,7 @@ class Home extends BaseController
 
     }
 
-    public function ClientallProducts() {
-        //retornar la vista de visualñizacion de una categoria
-        $categories = $this->get_data('categories');
-        $categories = $categories['status'] == "success" ? $categories['data'] : [];
-        return view('clients/categoryProducts', ['title' => 'Catálogo de Productos | Riveras Group', 'name' => 'Catálogo de Productos', 'categories' => $categories, 'lock_categorie' => null]);
 
-
-    }
 
     public function clientProduct() {
         // /product_search/:client(\\d+)/:category(\\d+)/:onlyStock(\\d+)
@@ -590,17 +592,17 @@ class Home extends BaseController
                 $mail->SMTPDebug = 0;
                 $mail->isSMTP();
                 $mail->CharSet = 'UTF-8';
-                // $mail->Host = "p3plzcpnl505881.prod.phx3.secureserver.net";
-                $mail->Host = "mail.riverasgroup.com";
-                $mail->SMTPAuth = true;
-                $mail->Username = "facturacion@riverasgroup.com";
                 $mail->isHTML(true);
-                $mail->Password = "iennsI8%RGG_";
-                $mail->SMTPSecure = 'ssl';
-                $mail->Port = 465;
+
+                $mail->Host = 'smtp.resend.com';
+                $mail->SMTPAuth = true;
+                $mail->Username = 'resend';                               // Siempre es la palabra "resend"
+                $mail->Password = $_ENV['RESEND_API_KEY'];          // Tu API Key generada en Resend
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;         // STARTTLS para el puerto 587
+                $mail->Port = 587;
 
                 $mail->setFrom('facturacion@riverasgroup.com', 'Facturación Electrónica Riveras Group');
-                //$mail->addAddress('luisrivera4540@gmail.com');
+                $mail->addReplyTo('facturacion@riverasgroup.com', 'Facturación Electrónica');
                 //direccion del correo en el DTE
                 $correo_recibe = $data['dte']['identificacion']['tipoDte'] == "14" ? $data['dte']['sujetoExcluido']['correo'] : $data['dte']['receptor']['correo'];
                 $mail->addAddress($correo_recibe);

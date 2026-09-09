@@ -13,7 +13,7 @@ $routes->get('/utils/services/sendPDF/(:num)', 'Home::sendPDF/$1');
 //  $routes->post('/utils/services/sendMail', 'Home::testMail');
 // $routes->get('/utils/services/dte/(:alphanum)', 'Home::yourMethod/$1', ['as' => 'downloadPDF']);
 
-$routes->post('/utils/system/sendDte', 'mailer::sendDte', ['as' => 'sedDTE']);
+//$routes->post('/utils/system/sendDte', 'mailer::sendDte', ['as' => 'sedDTE']);
 $routes->get('/', 'Home::index', ['as' => 'home']);
 $routes->get('/about', 'Home::about', ['as' => 'about']);
 $routes->get('/contact', 'Home::contact', ['as' => 'contact']);
@@ -32,7 +32,7 @@ $routes->get('/data_product/(:num)', 'Home::getProductData/$1');
 
 //solo los clientes que ha iniciado session
 
-$routes->get('/vip', 'Home::Vip', ['as' => 'vip', 'filter' => 'auth']);
+$routes->get('/vip', 'Home::ClientAllProducts', ['as' => 'vip', 'filter' => 'auth']);
 $routes->get('/vip/categories', 'Home::ClientCategories', ['filter' => 'auth']);
 $routes->get('/vip/categories/(:num)', 'Home::ClientCategorie/$1', ['filter' => 'auth']);
 $routes->get('/vip/catalogs', 'Home::ClientCatalogs', ['filter' => 'auth']);

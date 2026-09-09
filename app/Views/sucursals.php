@@ -119,4 +119,35 @@
     </div>
   </div>
 </section>
+
+
+<section class="bg-light">
+  <div class="container py-5">
+    <div class="row">
+      
+      <div class="col-lg-6 mb-0 d-flex align-items-center">
+        <div class="text-align-left align-self-center">
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d484.1239014563064!2d-89.72755593734533!3d13.719833777365412!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8f62b7dc93f4fff5%3A0xaa2aca429f74831b!2sRiveras%20Group%20Sonsonate!5e0!3m2!1ses!2ssv!4v1785960320519!5m2!1ses!2ssv"
+            class="maps" style="border:0;" allowfullscreen="" loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"></iframe>
+
+          <h3>Sonsonate</h3>
+          <p><b>Contacto:</b> <a href="https://wa.me/50372260174" class="a_">72260174</a></p>
+          <p>
+            <i class="fas fa-map-marker-alt fa-fw"></i>
+            <b>Dirección: </b>
+            Av. Fray Flavian Mucci y Calle Obispo Marroquin, numero 1-2
+          </p>
+        </div>
+      </div>
+
+      <div class="mx-auto col-md-8 col-lg-6 text-right">
+      <img class="img-fluid p-3 map_image" src="/img/maps5.jpg" alt="map image">
+      </div>
+    </div>
+  </div>
+</section>
+
+
 <?php $this->endSection() ?>

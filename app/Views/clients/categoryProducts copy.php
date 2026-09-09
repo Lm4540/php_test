@@ -109,25 +109,6 @@
             }
 
       }
-
-      #imageModal .modal-content {
-            background: transparent !important;
-      }
-
-      #imageModal.modal.fade.show {
-            background-color: rgba(0, 0, 0, 0.85);
-      }
-
-      @media (max-width: 576px) {
-            #imageModal .modal-dialog {
-                  margin: 10px;
-            }
-
-            #imageModal .btn-close {
-                  width: 1.5em;
-                  height: 1.5em;
-            }
-      }
 </style>
 <?php $this->endSection() ?>
 <?php $this->section('content') ?>
@@ -139,7 +120,7 @@
 
 </div>
 
-<div class="container">
+<div class="container-fluid">
       <h1 class="my-4" id="category_title"><?php echo $name ?></h1>
       <span class="badge bg-success mt-4 mb-4" onclick="window.print()"><i class="fas fa-print"></i> Imprimir</span>
 
@@ -164,45 +145,22 @@
                         <label for="searchInput" class="form-label">Buscar Producto</label>
                         <input type="text" class="form-control" id="searchInput" placeholder="Buscar..." disabled>
                   </div>
-                  <div class="col-md-4 form-group">
-                        <label for="orderFilter" class="form-label">Ordenar por</label>
-                        <select class="form-select" id="orderFilter">
-                              <option value="random">Aleatorio</option>
-                              <option value="newest">Lo Más nuevo</option>
-                              <option value="oldest">Por defecto</option>
-                        </select>
-                  </div>
 
             <?php }
             else { ?>
-                  <div class="col-md-6 form-group">
+                  <div class="col-md-12 form-group">
                         <label for="searchInput" class="form-label">Buscar Producto</label>
                         <input type="text" class="form-control" id="searchInput" placeholder="Buscar...">
                         <input type="hidden" id="categoryFilter" value="<?= $lock_categorie ?>">
                   </div>
-
-                  <div class="col-md-6 form-group">
-                        <label for="orderFilter" class="form-label">Ordenar por</label>
-                        <select class="form-select" id="orderFilter">
-                              <option value="random">Aleatorio</option>
-                              <option value="newest">Más nuevo</option>
-                              <option value="oldest">Más viejo</option>
-                        </select>
-                  </div>
             <?php } ?>
       </div>
-
-      <div id="loadingSpinner" class="text-center my-4" style="display: none;">
-            <div class="spinner-border text-primary" role="status"></div>
-      </div>
-
-
       <div id="productGrid" class="row align-items-stretch">
+
       </div>
       <div id="endOfList" class="text-center my-4" style="display: none;">
             <p>Fin de la lista</p>
       </div>
-
 
       <button id="scrollTopBtn" class="btn btn-primary btn-circle">↑</button>
 
@@ -233,140 +191,89 @@
             </div>
       </div>
 </div>
-
-<div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content bg-transparent border-0">
-                  <div class="modal-body p-0 position-relative">
-                        <button type="button"
-                              class="btn-close btn-close-white position-absolute top-0 end-0 m-3 shadow-lg"
-                              data-bs-dismiss="modal" aria-label="Close"
-                              style="z-index: 1051; filter: drop-shadow(0px 0px 5px rgba(0,0,0,0.8));">
-                        </button>
-
-                        <img src="" id="fullsizeImage" class="img-fluid rounded"
-                              style="max-height: 90vh; width: auto; display: block; margin: 0 auto; cursor: pointer;"
-                              data-bs-dismiss="modal">
-                  </div>
-            </div>
-      </div>
-</div>
-
-
 <?php $this->endSection() ?>
 
 <?php $this->section('scripts') ?>
 <script src="/js/html2canvas.min.js"></script>
 <script>
+      const toggleFilterBtn = document.getElementById('toggleFilterBtn');
+      const filterDiv = document.getElementById('filterDiv');
+      const productGrid = document.getElementById("productGrid");
+      const endOfList = document.getElementById("endOfList");
+      const categoryFilter = document.getElementById("categoryFilter");
+      const searchInput = document.getElementById("searchInput");
+      const maxPrice = document.getElementById("maxPrice");
+
+      let observer;
+      let products = [];
+      let displayedProducts = [];
+      const productsPerPage = 10;
+      let currentIndex = 0;
+      var catalog = null;
+      var sellerName = '',
+            sellerNumber = "";
+      var the_products_are_ready = false;
+      var lastProduct = null;
+      var screen_div = document.querySelector("#screen_div");
+
+      const captura = (id, name) => {
+            console.log(id, name)
+
+            screen_div.querySelector("#capture_div").innerHTML = document.getElementById('div_product_' + id).outerHTML;
+
+            html2canvas(screen_div).then(function (canvas) {
+                  const imgData = canvas.toDataURL('image/png');
+                  const link = document.createElement('a');
+                  link.href = imgData;
+                  link.download = name + '.png';
+                  link.click();
+                  canvas = null;
+
+
+            });
+            screen_div.querySelector("#capture_div").innerHTML = '';
+
+      }
+
 
       document.addEventListener("DOMContentLoaded", () => {
 
-            const filterDiv = document.getElementById('filterDiv');
-            const productGrid = document.getElementById("productGrid");
-            const endOfList = document.getElementById("endOfList");
-            const categoryFilter = document.getElementById("categoryFilter");
-            const searchInput = document.getElementById("searchInput");
-            const orderFilter = document.getElementById("orderFilter");
-            const loadingSpinner = document.getElementById("loadingSpinner");
-
-            let observer;
-            let products = [];
-            let displayedProducts = [];
-            const productsPerPage = 10;
-            let currentIndex = 0;
-
-            var catalog = null;
-            var sellerName = '',
-                  sellerNumber = "";
-            var the_products_are_ready = false;
-            var lastProduct = null;
-            var screen_div = document.querySelector("#screen_div");
-
-            // Dentro de tu DOMContentLoaded
-            const imageModalEl = document.getElementById('imageModal');
-            const imageModal = new bootstrap.Modal(imageModalEl);
-            const fullsizeImage = document.getElementById('fullsizeImage');
-
-            const openImage = (src) => {
-                  fullsizeImage.src = src;
-                  imageModal.show();
-            };
-
-            // Limpiar la imagen al cerrar para que no parpadee la vieja al abrir una nueva
-
-
-            const captura = (id, name) => {
-                  console.log(id, name)
-
-                  screen_div.querySelector("#capture_div").innerHTML = document.getElementById('div_product_' + id).outerHTML;
-
-                  html2canvas(screen_div).then(function (canvas) {
-                        const imgData = canvas.toDataURL('image/png');
-                        const link = document.createElement('a');
-                        link.href = imgData;
-                        link.download = name + '.png';
-                        link.click();
-                        canvas = null;
-
-
-                  });
-                  screen_div.querySelector("#capture_div").innerHTML = '';
-
-            }
-
-            const getLevenshteinDistance = (a, b) => {
-                  const matrix = Array.from({ length: b.length + 1 }, (_, i) => [i]);
-                  matrix[0] = Array.from({ length: a.length + 1 }, (_, i) => i);
-                  for (let i = 1; i <= b.length; i++) {
-                        for (let j = 1; j <= a.length; j++) {
-                              matrix[i][j] = b[i - 1] === a[j - 1]
-                                    ? matrix[i - 1][j - 1]
-                                    : Math.min(matrix[i - 1][j - 1], matrix[i][j - 1], matrix[i - 1][j]) + 1;
-                        }
+            // Mostrar el botón cuando se hace scroll hacia abajo
+            window.addEventListener('scroll', () => {
+                  const scrollTopBtn = document.getElementById('scrollTopBtn');
+                  if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+                        scrollTopBtn.style.display = 'flex';
+                  } else {
+                        scrollTopBtn.style.display = 'none';
                   }
-                  return matrix[b.length][a.length];
-            };
+            });
 
-            const normalizeText = (text) => {
-                  return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-            };
+            // Función para hacer scroll hacia arriba cuando se hace clic en el botón
+            document.getElementById('scrollTopBtn').addEventListener('click', () => {
+                  window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                  });
+            });
 
-            const updateURL = () => {
-                  const params = new URLSearchParams();
-
-                  if (searchInput.value.trim() !== "") params.set('q', searchInput.value.trim());
-                  if (categoryFilter.value !== "all") params.set('cat', categoryFilter.value);
-                  if (orderFilter && orderFilter.value !== "newest") params.set('ord', orderFilter.value);
-                  const newRelativePathQuery = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
-                  history.replaceState(null, '', newRelativePathQuery);
-            };
-
-            const loadFiltersFromURL = () => {
-                  const params = new URLSearchParams(window.location.search);
-                  if (params.has('q')) searchInput.value = params.get('q');
-                  if (params.has('cat')) categoryFilter.value = params.get('cat');
-                  if (params.has('ord') && orderFilter) orderFilter.value = params.get('ord');
-            };
-
-            const init = async () => {
-                  loadFiltersFromURL();
-                  await fetchProducts();
-            };
 
             const fetchProducts = async () => {
                   products = [];
+
+
                   try {
                         var response = await fetch('<?= $lock_categorie !== null ? "/vip/products?cat=" . $lock_categorie : "/vip/products" ?>', {
-                              method: 'GET',
-                              mode: 'cors',
-                              cache: 'no-cache',
-                              credentials: 'same-origin',
+                              method: 'GET', // *GET, POST, PUT, DELETE, etc.
+                              mode: 'cors', // no-cors, *cors, same-origin
+                              cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+                              credentials: 'same-origin', // include, *same-origin, omit
                               headers: {
                                     'Content-Type': 'application/json'
+                                    // 'Content-Type': 'application/x-www-form-urlencoded',
                               },
-                              redirect: 'follow',
-                              referrerPolicy: 'no-referrer',
-                        });
+                              redirect: 'follow', // manual, *follow, error
+                              referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+                        }); // Cambia esta URL por la URL real de tu API
                         response = await response.json();
                         if (response.status == "success") {
                               sellerName = response.sellerName;
@@ -387,22 +294,6 @@
                   }
             };
 
-            const setObserver = (target) => {
-                  if (observer) observer.disconnect();
-
-                  observer = new IntersectionObserver(entries => {
-                        if (entries[0].isIntersecting) {
-                              currentIndex += productsPerPage;
-                              displayProducts(currentIndex, currentIndex + productsPerPage);
-                        }
-                  });
-
-                  if (target) {
-                        observer.observe(target);
-                  }
-            };
-
-
             const displayProducts = (startIndex, endIndex) => {
                   const filteredProducts = applyFilters();
                   const productsToDisplay = filteredProducts.slice(startIndex, endIndex);
@@ -416,7 +307,7 @@
                               const productCard = document.createElement("div");
                               productCard.className = "col col-md-6 col-lg-4 d-flex ";
                               let ct = `<div class="card card-product flex-fill" id="div_product_${product.id}">
-                              <img src="/img/products/${product.image}" onclick="openImage(this.src)" onerror="error_img(this, '/image?img=${product.image}')" alt="${product.name}" class="card-img-top" loading="lazy">
+                              <img src="/img/products/${product.image}" onerror="error_img(this, '/image?img=${product.image}')" alt="${product.name}" class="card-img-top" loading="lazy">
             
             <div class="card-body">
             <a href="/vip/product/${product.id}" class="card_link"> 
@@ -473,102 +364,65 @@
                               setObserver(lastProduct);
                         }
                   } else {
-                        if (observer) {
-                              observer.disconnect();
-                        }
+                        observer.disconnect();
                         endOfList.style.display = "block";
                   }
             };
 
+            const setObserver = (target) => {
+                  if (observer) observer.disconnect();
 
+                  observer = new IntersectionObserver(entries => {
+                        if (entries[0].isIntersecting) {
+                              currentIndex += productsPerPage;
+                              displayProducts(currentIndex, currentIndex + productsPerPage);
+                        }
+                  });
+
+                  if (target) {
+                        observer.observe(target);
+                  }
+            };
 
             const applyFilters = () => {
                   const selectedCategory = `${categoryFilter.value}`;
-                  const rawSearch = searchInput.value;
-                  const searchQuery = normalizeText(rawSearch).trim();
-                  const orderValue = orderFilter ? orderFilter.value : 'newest';
-                  const stopWords = ["de", "con", "para", "un", "una", "el", "la", "color", "y", "-", "+"];
+                  const searchQuery = searchInput.value.toLowerCase();
 
-                  let filtered = products.filter(product => {
+                  // console.log(selectedCategory)
+
+                  return products.filter(product => {
                         const matchesCategory = (selectedCategory === "all" || product.classification == selectedCategory);
-                        if (searchQuery.length < 3) return matchesCategory;
-                        const productName = normalizeText(product.name);
-                        const sku = normalizeText(product.sku);
-                        if (sku === searchQuery || sku.includes(searchQuery)) return matchesCategory && true;
-                        const searchTokens = searchQuery.split(" ").filter(word => !stopWords.includes(word));
-                        const productWords = productName.split(" ");
 
-                        const isMatch = searchTokens.every(sToken => {
-                              if (productName.includes(sToken)) return true;
-                              return productWords.some(pWord => {
-                                    if (Math.abs(pWord.length - sToken.length) > 2) return false;
-                                    const dist = getLevenshteinDistance(sToken, pWord);
-                                    const threshold = sToken.length > 5 ? 2 : 1;
-                                    return dist <= threshold;
-                              });
-                        });
+                        const matchesSearch = (searchQuery.length < 3 || product.name.toLowerCase().includes(searchQuery) || product.sku.toLowerCase().includes(searchQuery));
 
-                        return matchesCategory && isMatch;
+                        return matchesCategory && matchesSearch;
                   });
-
-                  let sorted = [...filtered];
-                  if (orderValue === "oldest") {
-                        sorted.sort((a, b) => a.product - b.product);
-                  } else if (orderValue === "random") {
-                        for (let i = sorted.length - 1; i > 0; i--) {
-                              const j = Math.floor(Math.random() * (i + 1));
-                              [sorted[i], sorted[j]] = [sorted[j], sorted[i]];
-                        }
-                  } else {
-                        sorted.sort((a, b) => b.product - a.product);
-                  }
-
-                  return sorted;
             };
 
 
-            let debounceTimer;
-            const refreshGrid = () => {
-                  clearTimeout(debounceTimer);
-                  updateURL();
-                  productGrid.style.opacity = "0.3";
-                  if (loadingSpinner) loadingSpinner.style.display = "block";
-                  debounceTimer = setTimeout(() => {
+
+            categoryFilter.addEventListener("change", () => {
+                  if (the_products_are_ready) {
                         currentIndex = 0;
                         endOfList.style.display = "none";
-                        productGrid.innerHTML = "";
-                        displayedProducts = [];
+                        productGrid.innerHTML = ""; // Clear existing products
+                        displayedProducts = []; // Clear existing product references
                         displayProducts(currentIndex, currentIndex + productsPerPage);
-                        productGrid.style.opacity = "1";
-                        if (loadingSpinner) loadingSpinner.style.display = "none";
-                  }, 250);
-            };
-
-            imageModalEl.addEventListener('hidden.bs.modal', () => {
-                  fullsizeImage.src = '';
-            });
-
-            window.addEventListener('scroll', () => {
-                  const scrollTopBtn = document.getElementById('scrollTopBtn');
-                  if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
-                        scrollTopBtn.style.display = 'flex';
-                  } else {
-                        scrollTopBtn.style.display = 'none';
                   }
             });
 
-            document.getElementById('scrollTopBtn').addEventListener('click', () => {
-                  window.scrollTo({
-                        top: 0,
-                        behavior: 'smooth'
-                  });
+            searchInput.addEventListener("input", () => {
+                  if (the_products_are_ready) {
+                        currentIndex = 0;
+                        endOfList.style.display = "none";
+                        productGrid.innerHTML = ""; // Clear existing products
+                        displayedProducts = []; // Clear existing product references
+                        displayProducts(currentIndex, currentIndex + productsPerPage);
+                  }
+
             });
 
-
-            categoryFilter.addEventListener("change", refreshGrid);
-            searchInput.addEventListener("input", refreshGrid);
-            if (orderFilter) orderFilter.addEventListener("change", refreshGrid);
-            init();
+            fetchProducts();
       });
 
       ModalDisponibilidad = new bootstrap.Modal(document.getElementById('ver_disponibilidad'), {
