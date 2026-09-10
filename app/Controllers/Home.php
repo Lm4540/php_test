@@ -590,16 +590,17 @@ class Home extends BaseController
 
                 $mail = new PHPMailer(true);
                 $mail->SMTPDebug = 0;
-                $mail->isSMTP();
-                $mail->CharSet = 'UTF-8';
                 $mail->isHTML(true);
 
-                $mail->Host = 'smtp.resend.com';
+                // --- PROTOCOLO Y SERVIDOR ---
+                $mail->isSMTP();
+                $mail->Host = $_ENV['EMAIL_HOST'];
                 $mail->SMTPAuth = true;
-                $mail->Username = 'resend';                               // Siempre es la palabra "resend"
-                $mail->Password = $_ENV['RESEND_API_KEY'];          // Tu API Key generada en Resend
-                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;         // STARTTLS para el puerto 587
+                $mail->Username = $_ENV['EMAIL_USER'];
+                $mail->Password = $_ENV['EMAIL_PASWORD'];
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
                 $mail->Port = 587;
+                $mail->CharSet = 'UTF-8';
 
                 $mail->setFrom('facturacion@riverasgroup.com', 'Facturación Electrónica Riveras Group');
                 $mail->addReplyTo('facturacion@riverasgroup.com', 'Facturación Electrónica');
@@ -641,36 +642,43 @@ class Home extends BaseController
     }
 
 
-    public function testMail() {
+    public function anotherTest() {
         try {
             $mail = new PHPMailer(true);
-            $mail->SMTPDebug = 0;
+            // --- DEPURACIÓN (Muestra el intercambio SMTP en pantalla) ---
+            $mail->SMTPDebug = 0; // Cambia a 0 una vez confirmes que funciona
+            $mail->Debugoutput = 'html';
+
+            // --- PROTOCOLO Y SERVIDOR ---
             $mail->isSMTP();
-            $mail->CharSet = 'UTF-8';
-            // $mail->Host = "p3plzcpnl505881.prod.phx3.secureserver.net";
-            $mail->Host = "mail.riverasgroup.com";
+            $mail->Host = $_ENV['EMAIL_HOST'];
             $mail->SMTPAuth = true;
-            $mail->Username = "facturacion@riverasgroup.com";
+            $mail->Username = $_ENV['EMAIL_USER'];
+            $mail->Password = $_ENV['EMAIL_PASWORD'];
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port = 587;
+            $mail->CharSet = 'UTF-8';
+
+            // --- REMITENTE Y ENRUTAMIENTO ---
+            $mail->setFrom('facturacion@riverasgroup.com', 'Riveras Group');
+            $mail->addReplyTo('facturacion@riverasgroup.com', 'Soporte Riveras Group'); // Las respuestas van hacia Zoho
+
+            // --- DESTINATARIO ---
+            $mail->addAddress('luisrivera4540@gmail.com', 'Prueba Receptor');
+
+            // --- CONTENIDO DEL CORREO ---
             $mail->isHTML(true);
-            $mail->Password = "iennsI8%RGG_";
-            $mail->SMTPSecure = 'ssl';
-            $mail->Port = 465;
-            $mail->setFrom('facturacion@riverasgroup.com', 'Facturación Electrónica Riveras Group');
-            $mail->addAddress('luisrivera4540@gmail.com');
-            $mail->Subject = 'FACTURA ELECTRONICA';
-            $mail->Body = 'Estimad@ client->name, se anexa su documento tributario electrónico';
-            $mail->AltBody = 'Estimad@ client->name, se anexa su documento tributario electrónico';
+            $mail->Subject = 'Prueba de envío SMTP vía Resend';
+            $mail->Body = '<h3>Conexión exitosa</h3><p>Este es un correo de prueba enviado desde <strong>CodeIgniter 4</strong> usando el SMTP de <strong>Resend</strong>.</p>';
+            $mail->AltBody = 'Este es un correo de prueba enviado desde CodeIgniter 4 usando el SMTP de Resend.';
+
+            // Enviar
             $mail->send();
+            echo 'Mensaje enviado correctamente.';
 
-            return $this->response->setStatusCode(200)
-                ->setJSON(['status' => 'success', 'message' => 'Mensaje Enviado']);
         }
-        catch (\PHPMailer\PHPMailer\Exception $e) {
-            // var_dump($e);
-            // return $mail->ErrorInfo;
-
-            return $this->response->setStatusCode(200)
-                ->setJSON(['status' => 'error', 'message' => [$e->getMessage(), $mail->ErrorInfo],]);
+        catch (Exception $e) {
+            echo "Error al enviar: {$mail->ErrorInfo}";
         }
     }
 
