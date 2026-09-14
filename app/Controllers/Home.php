@@ -556,6 +556,7 @@ class Home extends BaseController
     }
 
     public function sendPDF($id) {
+        
         try {
             if ($this->request->getGet('dummy_key') !== '03b10bac1ef3b941?hl=es') {
                 return $this->response->setStatusCode(401)

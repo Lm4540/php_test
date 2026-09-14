@@ -29,6 +29,7 @@ $routes->get('/image', 'Home::image');
 $routes->get('/rm_image', 'Home::rm_image');
 $routes->get('/product/(:num)', 'Home::ClientViewProduct/$1');
 $routes->get('/data_product/(:num)', 'Home::getProductData/$1');
+
 $routes->get('/mail', 'Home::anotherTest', ['as' => 'testMail']);
 
 
